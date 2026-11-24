@@ -68,23 +68,39 @@ numbers = st.slider(
 )
 
 if st.button("추천받기"):
-    st.divider()
     if numbers > 7:
+        st.session_state["show_result"] = False
+        st.divider()
         st.error("추천 정책 개수를 초과하였습니다.")
     else:
-        st.write(
-            f'"{selected_country}의 {selected_issue}문제를 선택하였습니다."'
+        st.session_state["show_result"] = True
+        st.session_state["saved_country"] = selected_country
+        st.session_state["saved_issue"] = selected_issue
+        st.session_state["saved_numbers"] = numbers
+        st.session_state["result_list"] = recommend_policies(
+            selected_issue, numbers
         )
 
-        result_list = recommend_policies(selected_issue, numbers)
+if st.session_state.get("show_result"):
+    st.divider()
+    st.write(
+        f'"{st.session_state["saved_country"]}의 {st.session_state["saved_issue"]}문제를 선택하였습니다."'
+    )
 
-        table_data = []
-        for i in range(len(result_list)):
-            table_data.append([i + 1, result_list[i][0], result_list[i][1]])
+    result_list = st.session_state["result_list"]
+    table_data = []
+    for i in range(len(result_list)):
+        table_data.append([i + 1, result_list[i][0], result_list[i][1]])
 
-        df = pd.DataFrame(table_data, columns=["정책 번호", "정책 이름", "효과"])
-        st.subheader("정책 추천서")
-        st.table(df.set_index("정책 번호"))
+    df = pd.DataFrame(table_data, columns=["정책 번호", "정책 이름", "효과"])
+    st.subheader("정책 추천서")
+    st.table(df.set_index("정책 번호"))
 
-        chosen_policy_num = random.randint(1, numbers)
-        st.write(f'"내가 선택한 정책은 {chosen_policy_num}이다."')
+    chosen_policy_num = st.number_input(
+        "선택할 정책 번호를 입력하세요 :",
+        min_value=1,
+        max_value=st.session_state["saved_numbers"],
+        value=1,
+        step=1,
+    )
+    st.write(f'"내가 선택한 정책은 {chosen_policy_num}이다."')
